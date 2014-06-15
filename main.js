@@ -1,21 +1,33 @@
 var info = L.control();
+
 info.onAdd = function (map) {
-    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-    this.update();
-    return this._div;
-  };
+  this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+  this.update();
+  return this._div;
+};
 
-  function getWinner(voteInfo) {
-    var winner = {};
-
-    var arr = voteInfo['小記']['總計']['得票數'];
-    var index = arr.indexOf(Math.max.apply(this,arr));
-    winner.name = voteInfo['候選人'][index][1];
-    winner.party = voteInfo['候選人'][index][2];
-    winner.ratio = (voteInfo['小記']['總計']['得票率'][index] * 100);
-    winner.count = voteInfo['小記']['總計']['得票數'][index];
-    return winner;
+// method that we will use to update the control based on feature properties passed
+info.update = function (props) {
+  if (props) {
+    var winner = getWinner(props.vote);
+    this._div.innerHTML = '<h4>立委選區資訊</h4>' +
+    '<b>' + props.name + '</b><br />' +
+    '當選人與政黨：' + winner.name + '（' + winner.party + '）<br />' +
+    '得票狀況：' + winner.count  + ' 票（' + winner.ratio.toFixed(2) + '%）';
   }
+};
+
+function getWinner(voteInfo) {
+  var winner = {};
+
+  var arr = voteInfo['小記']['總計']['得票數'];
+  var index = arr.indexOf(Math.max.apply(this,arr));
+  winner.name = voteInfo['候選人'][index][1];
+  winner.party = voteInfo['候選人'][index][2];
+  winner.ratio = (voteInfo['小記']['總計']['得票率'][index] * 100);
+  winner.count = voteInfo['小記']['總計']['得票數'][index];
+  return winner;
+}
 
 function getColor(winner) {
   if (winner.party === '中國國民黨') {
@@ -48,17 +60,6 @@ function getColor(winner) {
     return '#dd1c77';
   }
 }
-
-// method that we will use to update the control based on feature properties passed
-info.update = function (props) {
-  if (props) {
-    var winner = getWinner(props.vote);
-    this._div.innerHTML = '<h4>立委選區資訊</h4>' +
-    '<b>' + props.name + '</b><br />' +
-    '當選人與政黨：' + winner.name + '（' + winner.party + '）<br />' +
-    '得票狀況：' + winner.count  + ' 票（' + winner.ratio.toFixed(2) + '%）';
-  }
-};
 
 function highlightFeature(e) {
   var layer = e.target;
@@ -113,17 +114,18 @@ L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 $.when(
   $.getJSON('json/twVote1982.geo.json'),
   $.getJSON('json/mly-8.json')
-  ).then(function(json1, json2) {
-    var vote = json1[0];
-    var mly = json2[0];
-    vote.features.forEach(function(f) {
-      f.properties.vote = mly[f.properties.county][f.properties.number];
-    });
-    geojson = L.geoJson(vote, {
-      style: style,
-      onEachFeature: onEachFeature
-    }).addTo(map);
+).then(function(json1, json2) {
+  var vote = json1[0];
+  var mly = json2[0];
+  vote.features.forEach(function(f) {
+    f.properties.vote = mly[f.properties.county][f.properties.number];
   });
+  geojson = L.geoJson(vote, {
+    style: style,
+    onEachFeature: onEachFeature
+  }).addTo(map);
+  $('#notification').hide();
+});
 
-  info.addTo(map);
+info.addTo(map);
 
