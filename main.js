@@ -1,7 +1,8 @@
 var info = L.control();
+var geojson;
 
 info.onAdd = function (map) {
-  this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+  this._div = L.DomUtil.create('div', 'info');
   this.update();
   return this._div;
 };
@@ -21,7 +22,7 @@ function getWinner(voteInfo) {
   var winner = {};
 
   var arr = voteInfo['小記']['總計']['得票數'];
-  var index = arr.indexOf(Math.max.apply(this,arr));
+  var index = arr.indexOf(Math.max.apply(this, arr));
   winner.name = voteInfo['候選人'][index][1];
   winner.party = voteInfo['候選人'][index][2];
   winner.ratio = (voteInfo['小記']['總計']['得票率'][index] * 100);
@@ -52,7 +53,7 @@ function getColor(winner) {
     } else if (winner.ratio > 20) {
       return '#66c2a4';
     } else if (winner.ratio > 10) {
-      return '#b2e2e2'
+      return '#b2e2e2';
     } else {
       return '#edf8fb';
     }
@@ -111,21 +112,31 @@ L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   maxZoom: 18
 }).addTo(map);
 
-$.when(
-  $.getJSON('json/twVote1982.geo.json'),
-  $.getJSON('json/mly-8.json')
-).then(function(json1, json2) {
-  var vote = json1[0];
-  var mly = json2[0];
-  vote.features.forEach(function(f) {
-    f.properties.vote = mly[f.properties.county][f.properties.number];
+$.getJSON('json/counties.json').then(function(data) {
+  var count = 0;
+  $.each(data, function(i, area) {
+    $.when(
+      $.getJSON('json/twVote1982/' + area + '.json'),
+      $.getJSON('json/mly/8/' + area + '.json')
+    ).then(function(voteResult, mlyResult) {
+      var voteInfo = voteResult[0];
+      var mly = mlyResult[0];
+
+      voteInfo.features[0].properties.vote = mly;
+      if (geojson) {
+        geojson.addData(voteInfo);
+      } else {
+        geojson = L.geoJson(voteInfo, {
+          style: style,
+          onEachFeature: onEachFeature
+        }).addTo(map);
+      }
+      count++;
+      if (count >= data.length) {
+        $('#notification').fadeOut();
+      }
+    });
   });
-  geojson = L.geoJson(vote, {
-    style: style,
-    onEachFeature: onEachFeature
-  }).addTo(map);
-  $('#notification').hide();
 });
 
 info.addTo(map);
-
