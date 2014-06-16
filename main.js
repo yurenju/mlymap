@@ -1,4 +1,5 @@
 var info = L.control();
+var geojson;
 
 info.onAdd = function (map) {
   this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
@@ -110,6 +111,17 @@ var map = L.map('map').setView([23.599, 121.108], 8);
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   maxZoom: 18
 }).addTo(map);
+
+
+$.getJSON('json/counties.json').then(function(data) {
+  var votePromises = $.map(data, function(value) {
+    return $.getJSON('json/twVote1982');
+  });
+
+  $.when.apply($, votePromises).then(function() {
+    $.each()
+  })
+});
 
 $.when(
   $.getJSON('json/twVote1982.geo.json'),
