@@ -94,7 +94,8 @@ function style(feature) {
     opacity: 1,
     color: 'white',
     dashArray: '3',
-    fillOpacity: 0.7
+    fillOpacity: 0.7,
+    className: 'county transparent'
   };
 }
 
@@ -131,6 +132,13 @@ $.getJSON('json/counties.json').then(function(data) {
           onEachFeature: onEachFeature
         }).addTo(map);
       }
+      setTimeout(function() {
+        $('.county').each(function(i, el) {
+          if (el.classList) {
+            el.classList.remove('transparent');
+          }
+        });
+      }, 100);
       count++;
       if (count >= data.length) {
         $('#notification').fadeOut();

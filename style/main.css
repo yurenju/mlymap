@@ -30,3 +30,11 @@ html, body, #map {
   right: 0;
   top: 1em;
 }
+
+.county {
+  transition: opacity 0.5s;
+}
+
+.transparent {
+  opacity: 0;
+}
