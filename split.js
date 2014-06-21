@@ -1,6 +1,20 @@
 var fs = require('fs');
 var path = require('path');
 var mkdirp = require('mkdirp');
+var mlyFiles = fs.readdirSync(path.join('json', 'mly', '8'));
+
+// normalize
+
+function normalize(filePath) {
+  fs.writeFileSync(filePath, fs.readFileSync(filePath, {encoding: 'utf-8'}).replace('臺', '台', 'g'));
+}
+
+normalize(path.join('json', 'twVote1982.geo.json'));
+normalize(path.join('json', 'twVillage1982.geo.json'));
+normalize(path.join('json', 'twVote1982.geo.json'));
+mlyFiles.forEach(function(mlyFile) {
+  normalize(path.join('json', 'mly', '8', mlyFile));
+});
 
 var voteInfo = JSON.parse(fs.readFileSync(path.join('json', 'twVote1982.geo.json')));
 var counties = [];
@@ -21,11 +35,10 @@ fs.writeFileSync(path.join('json', 'counties.json'), JSON.stringify(counties));
 var villagesGeojson = JSON.parse(fs.readFileSync(path.join('json', 'twVillage1982.geo.json')));
 var villages = {};
 villagesGeojson.features.forEach(function(f) {
-  console.log("f.properties.name: " + f.properties.name);
   villages[f.properties.name] = f;
 });
 
-var mlyFiles = fs.readdirSync(path.join('json', 'mly', '8'));
+
 mlyFiles.forEach(function(file) {
   var mly = JSON.parse(fs.readFileSync(path.join('json', 'mly', '8', file)));
   Object.keys(mly['投票狀況']).forEach(function(town) {
@@ -43,6 +56,8 @@ mlyFiles.forEach(function(file) {
         fs.writeFileSync(
           path.join(dirPath, village + '.json'), JSON.stringify(area)
         );
+      } else {
+        console.log("name not found: " + name);
       }
     })
   })
