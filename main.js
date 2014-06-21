@@ -4,6 +4,9 @@ var villageLayer;
 var zoomLevel = 0;
 var levels = [];
 
+const DEFAULT_LATITUDE = [23.599, 121.108];
+const DEFAULT_ZOOM = 8;
+
 info.onAdd = function (map) {
   this._div = L.DomUtil.create('div', 'info');
   this.update();
@@ -26,16 +29,34 @@ var nav = L.control({position: 'topleft'});
 nav.onAdd = function (map) {
   this._div = L.DomUtil.create('div', 'nav');
   this.update();
+
   return this._div;
 };
 
 nav.update = function (props) {
   this._div.innerHTML =
     '<ol class="breadcrumb">' +
-    '  <li><a href="#">台灣</a></li>' +
-    '  <li><a href="#">臺北市</a></li>' +
-    '  <li class="active">北投區</li>' +
+    '<li id="nav-taiwan">台灣</li>' +
+    (props ? '<li id="nav-town" class="active">' + props.vote['選區'][0] + '</li>' : '') +
     '</ol>';
+
+  var home = $(this._div).find('#nav-taiwan');
+  if (!props) {
+    home.addClass('active');
+  } else {
+    home.removeClass('active');
+    home.html('<a href="#">台灣</a>');
+    home.find('a').click(function() {
+      home.html('台灣');
+      home.parent().find('#nav-town').remove();
+      map.setView(DEFAULT_LATITUDE, DEFAULT_ZOOM);
+      if (map.hasLayer(villageLayer)) {
+        map.removeLayer(villageLayer);
+        villageLayer = null;
+        map.addLayer(districtsLayer);
+      }
+    });
+  }
 }
 
 
@@ -111,6 +132,7 @@ function resetHighlight(e) {
 function click(e) {
   zoomToFeature(e);
 
+  nav.update(e.target.feature.properties);
   if (villageLayer && map.hasLayer(villageLayer)) {
     map.removeLayer(villageLayer);
     villageLayer = null;
@@ -175,7 +197,8 @@ function onEachFeature(feature, layer) {
   });
 }
 
-var map = L.map('map', {zoomControl: false}).setView([23.599, 121.108], 8);
+var map = L.map('map', {zoomControl: false})
+  .setView(DEFAULT_LATITUDE, DEFAULT_ZOOM);
 
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   maxZoom: 18
