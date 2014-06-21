@@ -1,5 +1,8 @@
 var info = L.control();
-var geojson;
+var districtsLayer;
+var villageLayer;
+var zoomLevel = 0;
+var levels = [];
 
 info.onAdd = function (map) {
   this._div = L.DomUtil.create('div', 'info');
@@ -10,7 +13,7 @@ info.onAdd = function (map) {
 // method that we will use to update the control based on feature properties passed
 info.update = function (props) {
   if (props) {
-    var winner = getWinner(props.vote);
+    var winner = getWinner(props.vote, ['小記', '總計']);
     this._div.innerHTML = '<h4>立委選區資訊</h4>' +
     '<b>' + props.name + '</b><br />' +
     '當選人與政黨：' + winner.name + '（' + winner.party + '）<br />' +
@@ -18,15 +21,38 @@ info.update = function (props) {
   }
 };
 
-function getWinner(voteInfo) {
-  var winner = {};
+var nav = L.control({position: 'topleft'});
 
-  var arr = voteInfo['小記']['總計']['得票數'];
+nav.onAdd = function (map) {
+  this._div = L.DomUtil.create('div', 'nav');
+  this.update();
+  return this._div;
+};
+
+nav.update = function (props) {
+  this._div.innerHTML =
+    '<ol class="breadcrumb">' +
+    '  <li><a href="#">台灣</a></li>' +
+    '  <li><a href="#">臺北市</a></li>' +
+    '  <li class="active">北投區</li>' +
+    '</ol>';
+}
+
+
+function getWinner(voteInfo, path) {
+  var winner = {};
+  var statistic = voteInfo;
+
+  $.each(path, function(i, value) {
+    statistic = statistic[value];
+  });
+
+  var arr = statistic['得票數'];
   var index = arr.indexOf(Math.max.apply(this, arr));
   winner.name = voteInfo['候選人'][index][1];
   winner.party = voteInfo['候選人'][index][2];
-  winner.ratio = (voteInfo['小記']['總計']['得票率'][index] * 100);
-  winner.count = voteInfo['小記']['總計']['得票數'][index];
+  winner.ratio = (statistic['得票率'][index] * 100);
+  winner.count = statistic['得票數'][index];
   return winner;
 }
 
@@ -79,7 +105,42 @@ function highlightFeature(e) {
 }
 
 function resetHighlight(e) {
-  geojson.resetStyle(e.target);
+  districtsLayer.resetStyle(e.target);
+}
+
+function click(e) {
+  zoomToFeature(e);
+
+  if (villageLayer && map.hasLayer(villageLayer)) {
+    map.removeLayer(villageLayer);
+    villageLayer = null;
+  }
+  map.removeLayer(districtsLayer);
+  var props = e.target.feature.properties;
+  var name = props.county + '-' + props.number;
+  $.each(props.vote['投票狀況'], function(townName, town) {
+    $.each(town, function(villageName, village) {
+      var query = 'json/twVillage1982/' + name + '/' + props.vote['選區'][0] +
+        '/' + townName + '/' + villageName + '.json';
+      $.getJSON(query).then(function(villageGeo) {
+        villageGeo.features[0].properties.vote = props.vote;
+        if (villageLayer) {
+          villageLayer.addData(villageGeo);
+        } else {
+          villageLayer = L.geoJson(villageGeo, {
+            style: style
+          }).addTo(map);
+        }
+        setTimeout(function() {
+          $('.county').each(function(i, el) {
+            if (el.classList) {
+              el.classList.remove('transparent');
+            }
+          });
+        }, 100);
+      });
+    });
+  })
 }
 
 function zoomToFeature(e) {
@@ -88,8 +149,15 @@ function zoomToFeature(e) {
 }
 
 function style(feature) {
+  var path;
+  var props = feature.properties;
+  if (!props.VILLAGENAM) {
+    path = ['小記', '總計'];
+  } else {
+    path = ['投票狀況', props.TOWNNAME, props.VILLAGENAM, 0];
+  }
   return {
-    fillColor: getColor(getWinner(feature.properties.vote)),
+    fillColor: getColor(getWinner(feature.properties.vote, path)),
     weight: 2,
     opacity: 1,
     color: 'white',
@@ -103,11 +171,11 @@ function onEachFeature(feature, layer) {
   layer.on({
     mouseover: highlightFeature,
     mouseout: resetHighlight,
-    click: zoomToFeature
+    click: click
   });
 }
 
-var map = L.map('map').setView([23.599, 121.108], 8);
+var map = L.map('map', {zoomControl: false}).setView([23.599, 121.108], 8);
 
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   maxZoom: 18
@@ -124,10 +192,10 @@ $.getJSON('json/counties.json').then(function(data) {
       var mly = mlyResult[0];
 
       voteInfo.features[0].properties.vote = mly;
-      if (geojson) {
-        geojson.addData(voteInfo);
+      if (districtsLayer) {
+        districtsLayer.addData(voteInfo);
       } else {
-        geojson = L.geoJson(voteInfo, {
+        districtsLayer = L.geoJson(voteInfo, {
           style: style,
           onEachFeature: onEachFeature
         }).addTo(map);
@@ -147,4 +215,7 @@ $.getJSON('json/counties.json').then(function(data) {
   });
 });
 
+new L.Control.Zoom({ position: 'bottomright' }).addTo(map);
+
 info.addTo(map);
+nav.addTo(map);
