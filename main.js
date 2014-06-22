@@ -227,6 +227,9 @@ $.getJSON('json/counties.json').then(function(data) {
         $('.county').each(function(i, el) {
           if (el.classList) {
             el.classList.remove('transparent');
+          } else if (el.getAttribute && el.getAttribute('class')) {
+          	// workaround for IE 10
+          	el.setAttribute('class', el.getAttribute('class').replace('transparent', ''));
           }
         });
       }, 100);
