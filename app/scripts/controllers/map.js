@@ -143,12 +143,28 @@ angular.module('mlymapApp')
       });
     }
 
-    $scope.getWinnerName = function (property, showParty) {
+    function getWinnerByProperty(property) {
+      var path = [];
       if (!property) {
         return '--'
       }
-      var key = property.county + '-' + property.number;
-      var winner = voteInfoService.getWinner([key]);
+
+      if ($scope.selectedDistrictName) {
+        path.push($scope.selectedDistrictName, property.TOWNNAME,
+          property.VILLAGENAM);
+      } else {
+        path.push(property.county + '-' + property.number);
+      }
+
+      return voteInfoService.getWinner(path);
+    }
+
+    $scope.getWinnerName = function (property, showParty) {
+      var winner = getWinnerByProperty(property);
+      if (typeof winner === 'string') {
+        return winner;
+      }
+
       var res = winner.name;
       if (showParty) {
         res += '（' + winner.party + '）';
@@ -157,11 +173,10 @@ angular.module('mlymapApp')
     };
 
     $scope.getWinnerRatio = function (property, showPercent) {
-      if (!property) {
-        return '--'
+      var winner = getWinnerByProperty(property);
+      if (typeof winner === 'string') {
+        return winner;
       }
-      var key = property.county + '-' + property.number;
-      var winner = voteInfoService.getWinner([key]);
       return $filter('number')(winner.count) + ' 票（' +
         $filter('number')(winner.ratio, 2) +  '%）';
     };
