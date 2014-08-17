@@ -346,8 +346,7 @@ module.exports = function (grunt) {
             'views/{,*/}*.html',
             'images/{,*/}*.{webp}',
             'fonts/*',
-            'json/**',
-            'bower_components/bootstrap-sass-official/vendor/assets/fonts/*.*'
+            'json/**'
           ]
         }, {
           expand: true,
@@ -357,7 +356,10 @@ module.exports = function (grunt) {
         }, {
           expand: true,
           cwd: '.',
-          src: 'bower_components/bootstrap-sass-official/vendor/assets/fonts/bootstrap/*',
+          src: [
+            'bower_components/bootstrap-sass-official/vendor/assets/fonts/bootstrap/*',
+            'bower_components/components-font-awesome/fonts/*.*'
+          ],
           dest: '<%= yeoman.dist %>'
         }]
       },
