@@ -133,6 +133,9 @@ angular.module('mlymapApp')
     }
 
     function areaClick(ev, featureSelected, leafletEvent) {
+      if ($scope.selectedDistrictName) {
+        return;
+      }
       var props = leafletEvent.target.feature.properties;
       var name = props.county + '-' + props.number;
       $scope.selectedDistrictName = name;
