@@ -5,10 +5,13 @@
     <title>立委選票地圖</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
+    <meta property="og:title" content="台灣立委選舉分布圖" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="images/cover.png" />
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
-    <link rel="stylesheet" href="bower_components/leaflet-dist/leaflet.css" />
+    <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="bower_components/components-font-awesome/css/font-awesome.css" />
     <!-- endbower -->
     <!-- endbuild -->
@@ -32,7 +35,7 @@
        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-       ga('create', 'UA-XXXXX-X');
+       ga('create', 'UA-56890539-1');
        ga('send', 'pageview');
     </script>
 
@@ -64,7 +67,8 @@
     <script src="bower_components/angular-animate/angular-animate.js"></script>
     <script src="bower_components/angular-touch/angular-touch.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
-    <script src="bower_components/leaflet-dist/leaflet.js"></script>
+    <script src="bower_components/leaflet/dist/leaflet.js"></script>
+    <script src="bower_components/leaflet/dist/leaflet-src.js"></script>
     <script src="bower_components/angular-leaflet/dist/angular-leaflet-directive.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
